@@ -1,3 +1,8 @@
+interface InterfaceObj {
+  name: string;
+  type: string[];
+}
+
 export class CreateInterface {
         interfaceRes = '';
         interfaceResObj: any = {}
@@ -11,7 +16,6 @@ export class CreateInterface {
 
         // Запуск создания интерфейсов на основе данных
         start (): any {
-          // console.log(this.date.length);
           if (typeof this.date === 'object' && this.date === null) {
             return null
           }
@@ -49,7 +53,9 @@ export class CreateInterface {
         createArrayAll (data:any = this.date):string {
           const typeArray = []
           for (const [index, element] of data.entries()) {
+            // console.trace(element)
             const check = this.checkArray(element, `${this.nameInterface}${index}`)
+            // console.trace(check)
             if (check) {
               typeArray.push(check)
             }
@@ -124,7 +130,7 @@ export class CreateInterface {
         transformObjectRes ():void {
           for (const interfaceObjKey in this.interfaceObj) {
             this.interfaceObj[interfaceObjKey] = this.transformObjectValidString(this.interfaceObj[interfaceObjKey])
-            this.endNameInterface(`interface ${interfaceObjKey} {${this.interfaceObj[interfaceObjKey]}}`)
+            this.startNameInterface(`interface ${interfaceObjKey} {${this.interfaceObj[interfaceObjKey]}}`)
           }
         }
 
@@ -153,24 +159,36 @@ export class CreateInterface {
         addInterfaceObj (interfaceAdd: any = this.date, name:string = this.nameInterface): string {
           const check = this.validateInterface(interfaceAdd)
           if (!check) {
+            // console.trace(check)
             this.interfaceObj[name] = interfaceAdd
             return name
           }
-          return check
+          this.interfaceObj[check.name] = this.validateObjectNewsType(interfaceAdd, check.name)
+          return check.name
         }
 
-        validateInterface (interfaceAdd: any = this.date):string {
-          const keysInterfaceObj: any = this.mapInterfaceObj()
+        validateObjectNewsType (interfaceAdd: any, nameCloneInterface: string): any {
+          for (const key in this.interfaceObj[nameCloneInterface]) {
+            const valueArray = this.interfaceObj[nameCloneInterface][key].split('|')
+            const typeCheck = valueArray.filter((e:any) => e === interfaceAdd[key])[0]
+            if (!typeCheck) {
+              this.interfaceObj[nameCloneInterface][key] += `|${interfaceAdd[key]}`
+            }
+          }
+          return this.interfaceObj[nameCloneInterface]
+        }
+
+        validateInterface (interfaceAdd: any = this.date):InterfaceObj {
+          const keysInterfaceObj: Array<InterfaceObj> = this.mapInterfaceObj()
           const keysInterfaceAdd = Object.keys(interfaceAdd)
-          return keysInterfaceObj.filter((e: any) => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd))[0]?.name
+          // console.log(keysInterfaceObj, keysInterfaceObj)
+          return keysInterfaceObj.filter((e: InterfaceObj) => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd))[0]
           // return keysInterfaceObj.some(e => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd ))
         }
 
         validateDerevo (): any {
           const keysInterfaceResObj = Object.keys(this.interfaceResObj)
           const keysInterfaceObj: any = this.mapInterfaceObj()
-          // console.log(keysInterfaceObj)
-          // console.log(keysInterfaceResObj)
           const check = keysInterfaceObj.filter((e: any) => JSON.stringify(e.type) === JSON.stringify(keysInterfaceResObj))
           if (check[0]) {
             const nameDelete = check[0].name
@@ -184,8 +202,8 @@ export class CreateInterface {
           return this.interfaceResObj
         }
 
-        mapInterfaceObj (): any[] {
-          const keysInterfaceObj: any[] = []
+        mapInterfaceObj (): Array<InterfaceObj> {
+          const keysInterfaceObj = [] as Array<InterfaceObj>
           for (const key in this.interfaceObj) {
             keysInterfaceObj.push({ name: key, type: Object.keys(this.interfaceObj[key]) })
           }
