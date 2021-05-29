@@ -1,39 +1,68 @@
 <template>
   <div class="interface-page">
-   <div>
-     Инфо:
-     <div>  name: {{ name }}</div>
-     <div>  name: {{ json }}</div>
-     <div>  name: {{ res }}</div>
+   <div class="container">
+<!--     <div style="margin-bottom: 10px;">-->
+<!--       Инфо:-->
+<!--       <div>  name: {{ name }}</div>-->
+<!--       <div>  json: {{ json }}</div>-->
+<!--       <div>  res: {{ res }}</div>-->
+<!--     </div>-->
+
+     <form class="interface-form">
+       <input class="interface-form_elem" type="text" placeholder="названия интерфейса" v-model="name">
+       <textarea class="interface-form_elem" placeholder="данные" v-model="json"/>
+     </form>
+     <div class="interface-result" v-if="res">
+       <set-code :code="res"/>
+       <pre v-highlightjs="res"  >
+         <code class="json"></code></pre>
+     </div>
+
+     <button @click.prevent="starting">Сгенерировать интерфейс!</button>
    </div>
-    <input type="text" placeholder="name" v-model="name">
-    <textarea placeholder="json or array" v-model="json"></textarea>
-    <div>Результат: </div>
-    <pre>
-      {{ res }}
-    </pre>
-    <button @click.prevent="starting">Получить!</button>
-  </div>
+   </div>
 </template>
 
 <script lang="ts">
-import { start } from '@/lib/create/interface.js'
+import { CreateInterface } from '@/serve/createInterface'
 import { defineComponent } from 'vue'
+import SetCode from '@/components/setCode.vue'
 
 export default defineComponent({
   name: 'Home',
+  components: { SetCode },
   methods: {
     starting () {
-      this.res = start(JSON.parse(this.json), this.name)
+      // eslint-disable-next-line no-eval
+      // console.log(eval(this.json))
+      // eslint-disable-next-line no-eval
+      // const createInterface = new CreateInterface(eval(this.json), this.name)
+      const createInterface = new CreateInterface(JSON.parse(this.json), this.name)
+      this.res = createInterface.start()
     }
   },
   data () {
     return {
       name: '',
       json: '',
-      res: {}
+      res: null
     }
   }
 })
 </script>
-<style lang="scss"></style>
+<style lang="scss">
+.interface-form{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.interface-result{
+  position:  relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.interface-form_elem{
+  margin-bottom: 20px;
+}
+</style>
