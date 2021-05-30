@@ -22,7 +22,7 @@ describe('validate CreateInterface Object', () => {
   // Проверка что введено object {id: number, children: {id:number, children:{}}
   test('data: object  {id: number, children: {id:number, children:{}}', () => {
     const createInterface = new CreateInterface({ id: 1, children: { id: 1, children: { id: 1, children: {} } } }, 'name')
-    expect(createInterface.start()).toBe('interface Name {id:number;children:Name}')
+    expect(createInterface.start()).toBe('interface Name {id:number;children:Name | {}}')
   })
 })
 

@@ -36,6 +36,6 @@ describe('validate CreateInterface Array_Object', () => {
   // Проверка что введено array  {id: number | boolean, children: this}
   test('data: array  {id: number | boolean, children: this}', () => {
     const createInterface = new CreateInterface([{ id: 1, children: { id: 1, children: { id: false, children: {} } } }, { id: false, children: { id: 1, children: { id: true, children: {} } } }], 'name')
-    expect(createInterface.start()).toBe('interface Name {id:number;children:Name}')
+    expect(createInterface.start()).toBe('interface NameChildren {id:boolean|number;children:{}|NameChildren}interface Name {[index: number]: NameChildren}')
   })
 })

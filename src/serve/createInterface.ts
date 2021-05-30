@@ -82,7 +82,7 @@ export class CreateInterface {
           return `(${this.createArrayAll(data)}) []`
         }
 
-        checkObject (data:any = this.date, key: string): any {
+        checkObject (data:any = this.date, key: string, name = this.nameInterface): any {
           const check = this.checkNullAndType(data)
           if (check) {
             return check
@@ -91,9 +91,20 @@ export class CreateInterface {
             return null
           } else if (typeof data === 'object' && data.length) {
             return this.createArrayLevel2(data)
+          } else if (typeof data === 'object' && Object.keys(data).length === 0) {
+            return this.addNullObjectRules(key, name)
+            // return this.createObjectNews(data, this.nameInterface + this.transformNameInterface(key))
           } else if (typeof data === 'object') {
             return this.createObjectNews(data, this.nameInterface + this.transformNameInterface(key))
           }
+        }
+
+        addNullObjectRules (key: string, name:string):any {
+          if (this.interfaceObj[name] in [key]) {
+            console.log('АГА!')
+            return `${this.interfaceObj[name][key]}|{}`
+          }
+          return '{}'
         }
 
         checkNullAndType (data:any):any {
@@ -109,7 +120,7 @@ export class CreateInterface {
         createObjectAll (data:any = this.date, name = this.nameInterface, top = false): string {
           const type: any = {}
           for (const key in data) {
-            type[key] = this.checkObject(data[key], key)
+            type[key] = this.checkObject(data[key], key, name)
           }
           if (top) {
             this.interfaceResObj = type
@@ -169,7 +180,7 @@ export class CreateInterface {
           const check = this.validateInterface(interfaceAdd)
           if (!check) {
             // console.trace(check)
-            this.interfaceObj[name] = `${JSON.stringify(interfaceAdd)}`
+            this.interfaceObj[name] = interfaceAdd
             return name
           }
           this.interfaceObj[check.name] = this.validateObjectNewsType(interfaceAdd, check.name)
@@ -190,7 +201,6 @@ export class CreateInterface {
         validateInterface (interfaceAdd: any = this.date):InterfaceObj {
           const keysInterfaceObj: Array<InterfaceObj> = this.mapInterfaceObj()
           const keysInterfaceAdd = Object.keys(interfaceAdd)
-          console.log(keysInterfaceObj, keysInterfaceObj)
           return keysInterfaceObj.filter((e: InterfaceObj) => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd))[0]
           // return keysInterfaceObj.some(e => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd ))
         }
@@ -213,8 +223,8 @@ export class CreateInterface {
 
         mapInterfaceObj (): Array<InterfaceObj> {
           const keysInterfaceObj = [] as Array<InterfaceObj>
-          for (const key in this.interfaceObj) {
-            keysInterfaceObj.push({ name: key, type: Object.keys(this.interfaceObj[key]) })
+          for (const keyInterfaceObj in this.interfaceObj) {
+            keysInterfaceObj.push({ type: Object.keys(this.interfaceObj[keyInterfaceObj]), name: keyInterfaceObj })
           }
           return keysInterfaceObj
         }
