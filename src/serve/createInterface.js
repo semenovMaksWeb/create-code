@@ -8,11 +8,14 @@ export class CreateInterface {
     }
     // Запуск создания интерфейсов на основе данных
     start() {
-        // console.log(this.date.length);
         if (typeof this.date === 'object' && this.date === null) {
+            return null;
         }
-        else if (typeof this.date === 'object' && this.date.length) {
+        if (typeof this.date === 'object' && (this.date.length || this.date.length === 0)) {
             this.endNameInterface(`interface ${this.nameInterface} {[index: number]: ${this.createArray()}}`);
+        }
+        else if (typeof this.date === 'object' && Object.keys(this.date).length === 0) {
+            return 'object';
         }
         else if (typeof this.date === 'object') {
             this.endNameInterface(`interface ${this.nameInterface} {${this.createObject(undefined, undefined, true)}}`);
@@ -28,20 +31,23 @@ export class CreateInterface {
     }
     // Валидация каждого элемента массива!
     checkArray(date = this.date, name) {
+        const check = this.checkNullAndType(date);
+        if (check) {
+            return check;
+        }
         if (typeof date === 'object' && date.length) {
             return this.createArrayLevel2(date);
         }
         else if (typeof date === 'object') {
-            return this.cteateObjectNews(date, name);
-        }
-        else {
-            return typeof date;
+            return this.createObjectNews(date, name);
         }
     }
     createArrayAll(data = this.date) {
         const typeArray = [];
         for (const [index, element] of data.entries()) {
+            // console.trace(element)
             const check = this.checkArray(element, `${this.nameInterface}${index}`);
+            // console.trace(check)
             if (check) {
                 typeArray.push(check);
             }
@@ -52,22 +58,40 @@ export class CreateInterface {
     }
     // Создания интерфейса 1ур массив и возвращания его типов в виде строки
     createArray(data = this.date) {
-        return this.createArrayAll(data);
+        if (this.date.length === 0) {
+            return '[]';
+        }
+        const res = this.createArrayAll(data);
+        this.validateDerevo();
+        return res;
     }
     // Создания типа массива в массиве
     createArrayLevel2(data = this.date) {
         return `(${this.createArrayAll(data)}) []`;
     }
     checkObject(data = this.date, key) {
-        if (typeof data === 'object' && data.length) {
+        const check = this.checkNullAndType(data);
+        if (check) {
+            return check;
+        }
+        if (typeof data === 'object' && data === null) {
+            return null;
+        }
+        else if (typeof data === 'object' && data.length) {
             return this.createArrayLevel2(data);
         }
         else if (typeof data === 'object') {
-            return this.cteateObjectNews(data, this.nameInterface + this.transformNameInterface(key));
+            return this.createObjectNews(data, this.nameInterface + this.transformNameInterface(key));
         }
-        else {
+    }
+    checkNullAndType(data) {
+        if (typeof data === 'object' && data === null) {
+            return 'null';
+        }
+        if (typeof data !== 'object') {
             return typeof data;
         }
+        return undefined;
     }
     createObjectAll(data = this.date, name = this.nameInterface, top = false) {
         const type = {};
@@ -80,7 +104,7 @@ export class CreateInterface {
         }
         return this.addInterfaceObj(type, name);
     }
-    cteateObjectNews(data = this.date, name = this.nameInterface) {
+    createObjectNews(data = this.date, name = this.nameInterface) {
         return this.createObjectAll(data, name);
     }
     createObject(data = this.date, name = this.nameInterface, top = false) {
@@ -96,11 +120,10 @@ export class CreateInterface {
     transformObjectRes() {
         for (const interfaceObjKey in this.interfaceObj) {
             this.interfaceObj[interfaceObjKey] = this.transformObjectValidString(this.interfaceObj[interfaceObjKey]);
-            this.endNameInterface(`interface ${interfaceObjKey} {${this.interfaceObj[interfaceObjKey]}}`);
+            this.startNameInterface(`interface ${interfaceObjKey} {${this.interfaceObj[interfaceObjKey]}}`);
         }
     }
     // Удалить лишние {}
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/ban-types
     transformObjectValidString(type) {
         let res;
         if (typeof type === 'object') {
@@ -123,29 +146,40 @@ export class CreateInterface {
     addInterfaceObj(interfaceAdd = this.date, name = this.nameInterface) {
         const check = this.validateInterface(interfaceAdd);
         if (!check) {
+            // console.trace(check)
             this.interfaceObj[name] = interfaceAdd;
             return name;
         }
-        return check;
+        this.interfaceObj[check.name] = this.validateObjectNewsType(interfaceAdd, check.name);
+        return check.name;
+    }
+    validateObjectNewsType(interfaceAdd, nameCloneInterface) {
+        for (const key in this.interfaceObj[nameCloneInterface]) {
+            const valueArray = this.interfaceObj[nameCloneInterface][key].split('|');
+            const typeCheck = valueArray.filter((e) => e === interfaceAdd[key])[0];
+            if (!typeCheck) {
+                this.interfaceObj[nameCloneInterface][key] += `|${interfaceAdd[key]}`;
+            }
+        }
+        return this.interfaceObj[nameCloneInterface];
     }
     validateInterface(interfaceAdd = this.date) {
         const keysInterfaceObj = this.mapInterfaceObj();
         const keysInterfaceAdd = Object.keys(interfaceAdd);
-        return keysInterfaceObj.filter((e) => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd))[0]?.name;
+        // console.log(keysInterfaceObj, keysInterfaceObj)
+        return keysInterfaceObj.filter((e) => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd))[0];
         // return keysInterfaceObj.some(e => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd ))
     }
     validateDerevo() {
         const keysInterfaceResObj = Object.keys(this.interfaceResObj);
         const keysInterfaceObj = this.mapInterfaceObj();
-        // console.log(keysInterfaceObj)
-        // console.log(keysInterfaceResObj)
         const check = keysInterfaceObj.filter((e) => JSON.stringify(e.type) === JSON.stringify(keysInterfaceResObj));
         if (check[0]) {
             const nameDelete = check[0].name;
             delete this.interfaceObj[nameDelete];
-            for (const [key, value] of Object.entries(this.interfaceResObj)) {
+            for (const [key] of Object.entries(this.interfaceResObj)) {
                 if (this.interfaceResObj[key] === nameDelete) {
-                    this.interfaceResObj[key] = this.nameInterface;
+                    this.interfaceResObj[key] = `${this.nameInterface}`;
                 }
             }
         }

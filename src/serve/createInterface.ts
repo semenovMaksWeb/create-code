@@ -19,13 +19,15 @@ export class CreateInterface {
           if (typeof this.date === 'object' && this.date === null) {
             return null
           }
-          if (typeof this.date === 'object' && this.date.length) {
+          if (typeof this.date === 'object' && (this.date.length || this.date.length === 0)) {
             this.endNameInterface(
                     `interface ${this.nameInterface} {[index: number]: ${this.createArray()}}`
             )
+          } else if (typeof this.date === 'object' && Object.keys(this.date).length === 0) {
+            return 'object'
           } else if (typeof this.date === 'object') {
             this.endNameInterface(
-                    `interface ${this.nameInterface} {${this.createObject(undefined, undefined, true)}}`
+                    `interface ${this.nameInterface} ${this.createObject(undefined, undefined, true)}`
             )
           } else {
             this.interfaceRes = typeof this.date
@@ -46,7 +48,7 @@ export class CreateInterface {
           if (typeof date === 'object' && date.length) {
             return this.createArrayLevel2(date)
           } else if (typeof date === 'object') {
-            return this.cteateObjectNews(date, name)
+            return this.createObjectNews(date, name)
           }
         }
 
@@ -67,7 +69,12 @@ export class CreateInterface {
 
         // Создания интерфейса 1ур массив и возвращания его типов в виде строки
         createArray (data:any = this.date): string {
-          return this.createArrayAll(data)
+          if (this.date.length === 0) {
+            return '[]'
+          }
+          const res = this.createArrayAll(data)
+          this.validateDerevo()
+          return res
         }
 
         // Создания типа массива в массиве
@@ -85,7 +92,7 @@ export class CreateInterface {
           } else if (typeof data === 'object' && data.length) {
             return this.createArrayLevel2(data)
           } else if (typeof data === 'object') {
-            return this.cteateObjectNews(data, this.nameInterface + this.transformNameInterface(key))
+            return this.createObjectNews(data, this.nameInterface + this.transformNameInterface(key))
           }
         }
 
@@ -111,7 +118,7 @@ export class CreateInterface {
           return this.addInterfaceObj(type, name)
         }
 
-        cteateObjectNews (data:any = this.date, name = this.nameInterface): string {
+        createObjectNews (data:any = this.date, name = this.nameInterface): string {
           return this.createObjectAll(data, name)
         }
 
@@ -130,18 +137,20 @@ export class CreateInterface {
         transformObjectRes ():void {
           for (const interfaceObjKey in this.interfaceObj) {
             this.interfaceObj[interfaceObjKey] = this.transformObjectValidString(this.interfaceObj[interfaceObjKey])
-            this.startNameInterface(`interface ${interfaceObjKey} {${this.interfaceObj[interfaceObjKey]}}`)
+            this.startNameInterface(`interface ${interfaceObjKey} ${this.interfaceObj[interfaceObjKey]}`)
           }
         }
 
-        // Удалить лишние {}
+        // Удалить лишние символы
         transformObjectValidString (type: any): string {
           let res
           if (typeof type === 'object') {
-            res = JSON.stringify(type).replace(new RegExp('[\{\}"\\\\]', 'gi'), '')
+            // res = JSON.stringify(type)
+            res = JSON.stringify(type).replace(new RegExp('["\\\\]', 'gi'), '')
             return res.replace(new RegExp('[\,]', 'gi'), ';')
           } else {
-            res = type.replace(new RegExp('[\{\}"\\\\]', 'gi'), '')
+            // res = type
+            res = type.replace(new RegExp('["\\\\]', 'gi'), '')
             return res.replace(new RegExp('[\,]', 'gi'), ';')
           }
         }
@@ -160,7 +169,7 @@ export class CreateInterface {
           const check = this.validateInterface(interfaceAdd)
           if (!check) {
             // console.trace(check)
-            this.interfaceObj[name] = interfaceAdd
+            this.interfaceObj[name] = `${JSON.stringify(interfaceAdd)}`
             return name
           }
           this.interfaceObj[check.name] = this.validateObjectNewsType(interfaceAdd, check.name)
@@ -181,7 +190,7 @@ export class CreateInterface {
         validateInterface (interfaceAdd: any = this.date):InterfaceObj {
           const keysInterfaceObj: Array<InterfaceObj> = this.mapInterfaceObj()
           const keysInterfaceAdd = Object.keys(interfaceAdd)
-          // console.log(keysInterfaceObj, keysInterfaceObj)
+          console.log(keysInterfaceObj, keysInterfaceObj)
           return keysInterfaceObj.filter((e: InterfaceObj) => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd))[0]
           // return keysInterfaceObj.some(e => JSON.stringify(e.type) === JSON.stringify(keysInterfaceAdd ))
         }
@@ -195,7 +204,7 @@ export class CreateInterface {
             delete this.interfaceObj[nameDelete]
             for (const [key] of Object.entries(this.interfaceResObj)) {
               if (this.interfaceResObj[key] === nameDelete) {
-                this.interfaceResObj[key] = this.nameInterface
+                this.interfaceResObj[key] = `${this.nameInterface} | {}`
               }
             }
           }

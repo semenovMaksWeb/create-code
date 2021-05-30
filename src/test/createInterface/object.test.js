@@ -1,5 +1,9 @@
 import { CreateInterface } from '../../serve/createInterface.ts'
 describe('validate CreateInterface Object', () => {
+  test('data: object {}', () => {
+    const createInterface = new CreateInterface({}, 'name')
+    expect(createInterface.start()).toBe('object')
+  })
   // Проверка что введено object {id: number, text: string}
   test('data: object {id: number, text: string}', () => {
     const createInterface = new CreateInterface({ id: 1, text: 'add' }, 'name')
@@ -21,3 +25,4 @@ describe('validate CreateInterface Object', () => {
     expect(createInterface.start()).toBe('interface Name {id:number;children:Name}')
   })
 })
+

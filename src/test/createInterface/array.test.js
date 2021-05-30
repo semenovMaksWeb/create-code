@@ -5,6 +5,11 @@ describe('validate CreateInterface Array', () => {
     const createInterface = new CreateInterface(['1', '2', '3'], 'name')
     expect(createInterface.start()).toBe('interface Name {[index: number]: string}')
   })
+  // Проверка что введено array []
+  test('data: array string', () => {
+    const createInterface = new CreateInterface([], 'name')
+    expect(createInterface.start()).toBe('interface Name {[index: number]: []}')
+  })
   // Проверка что введено array number
   test('data: array number', () => {
     const createInterface = new CreateInterface([1, 2, 3, 4, 5], 'name')
